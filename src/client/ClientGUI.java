@@ -89,8 +89,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
         }
         else
-            //Проверим нажато ли "Send" или есть активность в поле для ввода сообщения
-            if(src == btnSend || tfMessage.isFocusable()) {
+            //Проверим нажато ли "Send" и есть ли вообще что отправлять
+            if((src == btnSend && !tfMessage.getText().isEmpty()) || !tfMessage.getText().isEmpty()) {
                 try {
                     saveText(tfMessage.getText());                  //Пробуем записать текст в файл
                 } catch (IOException ex) {
@@ -100,8 +100,9 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             tfMessage.setText("");                      //Очистим поле ввода
             tfMessage.requestFocusInWindow();           //Сфокусируемся на новом вводе
             }
-            else
-            throw new RuntimeException("Unknown source: " + src);
+//            Это здесь уже не нужно
+//            else
+//            throw new RuntimeException("Unknown source: " + src);
     }
 
     @Override
