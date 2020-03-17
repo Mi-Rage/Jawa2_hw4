@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 
 public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler {
 
@@ -26,6 +27,9 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
     private final JList<String> userList = new JList<>();
 
+    final File file = new File("log.txt");  //Сохраним текст в этом файле
+    FileWriter fileWriter;                            //используя файлврайтер, мне кажется он здесь удобнее.
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -46,9 +50,12 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         userList.setListData(users);
         log.setEditable(false);
         JScrollPane scrollLog = new JScrollPane(log);
+        log.setLineWrap(true);                                          // Перенос слов при достижении конца окна
         JScrollPane scrollUsers = new JScrollPane(userList);
         scrollUsers.setPreferredSize(new Dimension(100, 0));
         cbAlwaysOnTop.addActionListener(this);
+        tfMessage.addActionListener(this);  //Слушатель нужен и полю ввода
+        btnSend.addActionListener(this);    //и кнопке "Send".
 
         panelTop.add(tfIPAddress);
         panelTop.add(tfPort);
@@ -68,6 +75,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         setVisible(true);
     }
 
+    //Запись текста в файл
+    public void saveText(String tfMessage) throws IOException {
+        fileWriter = new FileWriter(file, true);    //Создадим экземпляр врайтера с возможностью добавления
+        fileWriter.write(tfMessage + "\n");             //Добавляем текст в файл
+        fileWriter.close();                                 //Закрываем врайтер чтобы освободить ресурсы
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
@@ -75,7 +89,20 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
         }
         else
-            throw new RuntimeException("Unknown source: " + src);
+            //Проверим нажато ли "Send" и есть ли вообще что отправлять
+            if((src == btnSend && !tfMessage.getText().isEmpty()) || !tfMessage.getText().isEmpty()) {
+                try {
+                    saveText(tfMessage.getText());                  //Пробуем записать текст в файл
+                } catch (IOException ex) {
+                    uncaughtException(Thread.currentThread(),ex);   //Если не выходит - видим почему
+                }
+            log.append(tfMessage.getText() + "\n");     //Добавляем текст из поля ввода в поле log
+            tfMessage.setText("");                      //Очистим поле ввода
+            tfMessage.requestFocusInWindow();           //Сфокусируемся на новом вводе
+            }
+//            Это здесь уже не нужно
+//            else
+//            throw new RuntimeException("Unknown source: " + src);
     }
 
     @Override
